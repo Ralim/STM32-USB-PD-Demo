@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+Workspace/.metadata/
+Workspace/USBPDDemo/Debug/
+Workspace/USBPDDemo/.settings/

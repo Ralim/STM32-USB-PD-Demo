@@ -1,0 +1,3 @@
+[submodule "Workspace/USBPDDemo/Core/Drivers/usb-pd"]
+	path = Workspace/USBPDDemo/Core/Drivers/usb-pd
+	url = https://github.com/Ralim/usb-pd.git
