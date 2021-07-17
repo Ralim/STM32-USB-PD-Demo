@@ -118,6 +118,7 @@ bool pdbs_dpm_evaluate_capability(const pd_msg *capabilities, pd_msg *request) {
 			}
 		}
 	}
+
 	if (bestIndex != 0xFF) {
 		printf("Found desired capability at index  %d, %d mV, %d mA\r\n",
 				(int) bestIndex, bestIndexVoltage, bestIndexCurrent * 10);
