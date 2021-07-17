@@ -27,22 +27,35 @@ bool irc_read(const uint8_t deviceAddr, const uint8_t registerAdd,
 FUSB302 fusb(FUSB302B_ADDR, irc_read, irc_write, HAL_Delay); // Create FUSB driver
 PolicyEngine pe(fusb, HAL_GetTick, HAL_Delay, pdbs_dpm_get_sink_capability,
 		pdbs_dpm_evaluate_capability);
+
+volatile bool irqoccured = false;
 void pd_user_main() {
-	if (fusb.fusb_read_id()&&fusb.fusb_setup()) {
+
+	if (fusb.fusb_read_id() && fusb.fusb_setup()) {
 
 		//FUSB detected, start code
 		printf("FUSB Comms OK\r\n");
+		irqoccured = true; //Force at least one read of the status regs at boot
 		for (;;) {
-			pe.thread();
-			HAL_Delay(100);
+			printf(">Running thread \r\n");
+			while (pe.thread()) { //Iterate until its stable
+			}
+			printf(">Waiting for events \r\n");
+			while (irqoccured == false
+					&& (HAL_GPIO_ReadPin(FUSB_IRQ_GPIO_Port, FUSB_IRQ_Pin)
+							== GPIO_PIN_SET)) {
+				HAL_Delay(3); // Must respond to messages < 20ms, so fast iteration or use an rtos to schedule
+			}
+			irqoccured = false;
 			pe.IRQOccured();
-			printf("State %d\r\n",pe.currentStateCode());
 		}
 	} else {
 		printf("FUSB Comms Failed\r\n");
 	}
 }
-
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	irqoccured = true;
+}
 /* The current draw when the output is disabled */
 #define DPM_MIN_CURRENT PD_MA2PDI(100)
 
@@ -107,7 +120,7 @@ bool pdbs_dpm_evaluate_capability(const pd_msg *capabilities, pd_msg *request) {
 	}
 	if (bestIndex != 0xFF) {
 		printf("Found desired capability at index  %d, %d mV, %d mA\r\n",
-				(int) bestIndex, bestIndexVoltage, bestIndexCurrent);
+				(int) bestIndex, bestIndexVoltage, bestIndexCurrent * 10);
 
 		/* We got what we wanted, so build a request for that */
 		request->hdr = PD_MSGTYPE_REQUEST | PD_NUMOBJ(1);

@@ -14,6 +14,7 @@ extern "C" {
 #include "stm32f4xx_hal.h"
 #include "i2c.h"
 void pd_user_main();
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 #ifdef __cplusplus
 }
 #endif
